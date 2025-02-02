@@ -12,17 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # strategy:
-    #   matrix:
-    #     goos-goarch:
-    #       [
-    #         linux-amd64,
-    #         linux-386,
-    #         linux-arm64,
-    #         windows-amd64,
-    #         windows-386,
-    #         darwin-amd64,
-    #       ]
     env:
       ARTIFACT_NAME: real-voice-limiter # -${{ matrix.goos-goarch}}
     steps:
@@ -32,25 +21,20 @@ jobs:
         id: golang-version
         run: |
           echo golang_version=$(cat .tool-versions | grep golang | cut -d' ' -f2) >> $GITHUB_OUTPUT
-      #   echo goos=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f1) >> $GITHUB_OUTPUT
-      #   echo goarch=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f2) >> $GITHUB_OUTPUT
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ steps.golang-version.outputs.golang_version }}
-
-      - name: Get dependencies
-        run: go mod download
 
       - name: Build
-        # env:
-        #   GOOS: ${{ steps.golang-version.outputs.goos }}
-        #   GOARCH: ${{ steps.golang-version.outputs.goarch }}
-        run: go build -v -o build/${{ env.ARTIFACT_NAME }}
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: ${{ steps.golang-version.outputs.golang_version }}
+          targets: linux/amd64,linux/arm64,windows/amd64,darwin/amd64,darwin/arm64
+          dest: build
+          ldflags: -s -w
+          v: true
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: ${{ env.ARTIFACT_NAME }}
           path: build/*
           if-no-files-found: warn
