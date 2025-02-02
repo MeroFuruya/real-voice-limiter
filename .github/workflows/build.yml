@@ -31,6 +31,12 @@ jobs:
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: build/*
+          path: build/
           name: real-voice-limiter
           if-no-files-found: warn
+
+      - name: Upload release asset
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/*
