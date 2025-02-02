@@ -24,7 +24,6 @@ jobs:
             darwin-amd64,
           ]
     env:
-      CGO_ENABLED: 0
       ARTIFACT_NAME: real-voice-limiter-${{ matrix.goos-goarch}}
     steps:
       - uses: actions/checkout@v4
