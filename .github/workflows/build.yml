@@ -18,8 +18,6 @@ jobs:
         goarch: [amd64, 386, arm64]
     env:
       CGO_ENABLED: 0
-      GOOS: ${{ matrix.goos }}
-      GOARCH: ${{ matrix.goarch }}
       ARTIFACT_NAME: real-voice-limiter-${{ matrix.goos }}-${{ matrix.goarch }}
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +31,9 @@ jobs:
         run: go mod download
 
       - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
         run: go build -v -o build/${{ env.ARTIFACT_NAME }}
 
       - name: Archive artifacts
