@@ -10,7 +10,10 @@ type DevicesArgs struct {
 }
 
 type RunArgs struct {
-	DeviceId string `arg:"required,positional"`
+	PlaybackDeviceId string `arg:"--playback-device-id" help:"ID of the playback device to use"`
+	CaptureDeviceId  string `arg:"--capture-device-id" help:"ID of the capture device to use"`
+	Threshold        uint16 `arg:"--threshold" help:"Threshold for the volume level"`
+	Amplitude        uint16 `arg:"--amplitude" help:"Amplitude of the volume level"`
 }
 
 type Args struct {
