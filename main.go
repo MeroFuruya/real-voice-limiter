@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"time"
 
 	"github.com/gen2brain/malgo"
 )
@@ -102,11 +103,15 @@ func main() {
 		deviceConfig.SampleRate = SampleRate
 		deviceConfig.Alsa.NoMMap = 1
 
-		callbacks := GetCallbacks(Optionns{
+		printChan := make(chan string)
+		callbacks := GetCallbacks(Options{
 			Frequency: 440,
 			Threshold: args.Run.Threshold,
 			Amplitude: args.Run.Amplitude,
+			PrintChan: printChan,
 		})
+
+		go PrintData(printChan)
 
 		device, err := malgo.InitDevice(context.Context, deviceConfig, callbacks)
 		if err != nil {
@@ -122,51 +127,62 @@ func main() {
 	}
 }
 
-type Optionns struct {
-	Threshold uint16
-	Amplitude uint16
+type Options struct {
+	Threshold int16
+	Amplitude int16
 	Frequency uint32
+	PrintChan chan string
 }
 
-func GetCallbacks(options Optionns) malgo.DeviceCallbacks {
+func GetCallbacks(options Options) malgo.DeviceCallbacks {
 	return malgo.DeviceCallbacks{
 		Data: OnRecvFramesFactory(options),
 	}
 }
 
-func OnRecvFramesFactory(options Optionns) malgo.DataProc {
+func PrintData(channel chan string) {
+	for channel != nil {
+		fmt.Println(<-channel)
+	}
+}
+
+func OnRecvFramesFactory(options Options) malgo.DataProc {
 	var deltaSampleSecond uint32 = 0
 	var sampleT1 uint32 = 0
 
+	var frameCount uint64 = 0
+	var lastStutterFrame uint64 = 0
+
+	var lastTime time.Time
 	return func(pOutputSamples, pInputSamples []byte, sampleCount uint32) {
-		values := make([]int16, len(pInputSamples)/2)
-		for i := 0; i < len(pInputSamples); i += 2 {
-			values[i/2] = int16(pInputSamples[i]) | int16(pInputSamples[i+1])<<8
-		}
-
-		absolutes := make([]int16, len(values))
-		for i, value := range values {
-			if value < 0 {
-				absolutes[i] = -value
-			} else {
-				absolutes[i] = value
-			}
-		}
-
-		max := int16(0)
-		for _, value := range absolutes {
-			if value > max {
-				max = value
-			}
-		}
-
-		if max > int16(options.Threshold) {
-			sampleT1 = 0
+		// Print the time difference between the expected and actual time
+		frameCount++
+		now := time.Now()
+		expectedTime := float64(sampleCount) / SampleRate
+		actualTime := now.Sub(lastTime).Seconds()
+		lastTime = now
+		diff := expectedTime - actualTime
+		if diff < 0 {
+			options.PrintChan <- fmt.Sprintf("frame: %d/%d, expected: %f, actual: %f, diff: %f", frameCount, frameCount-lastStutterFrame, expectedTime, actualTime, -diff)
+			lastStutterFrame = frameCount
 		}
 
 		for i := uint32(0); i < sampleCount; i++ {
+			// calculate the time in seconds
 			t := float64(sampleT1+i) / SampleRate
 
+			inputSample := int16(pInputSamples[i*2]) | int16(pInputSamples[i*2+1])<<8
+
+			// absolute value
+			if inputSample < 0 {
+				inputSample = -inputSample
+			}
+
+			if inputSample > options.Threshold {
+				sampleT1 = 0
+			}
+
+			// calculate playback sound
 			const T1 = 0.5
 			var e float64 = 1
 			if t > T1 {
@@ -180,6 +196,7 @@ func OnRecvFramesFactory(options Optionns) malgo.DataProc {
 			pOutputSamples[i*2+1] = byte(y >> 8)
 		}
 
+		// count the samples
 		sampleT1 += sampleCount
 		deltaSampleSecond += sampleCount
 		if deltaSampleSecond > SampleRate {
