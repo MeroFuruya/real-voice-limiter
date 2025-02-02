@@ -12,19 +12,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos-goarch:
-          [
-            linux-amd64,
-            linux-386,
-            linux-arm64,
-            windows-amd64,
-            windows-386,
-            darwin-amd64,
-          ]
+    # strategy:
+    #   matrix:
+    #     goos-goarch:
+    #       [
+    #         linux-amd64,
+    #         linux-386,
+    #         linux-arm64,
+    #         windows-amd64,
+    #         windows-386,
+    #         darwin-amd64,
+    #       ]
     env:
-      ARTIFACT_NAME: real-voice-limiter-${{ matrix.goos-goarch}}
+      ARTIFACT_NAME: real-voice-limiter # -${{ matrix.goos-goarch}}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,8 +32,8 @@ jobs:
         id: golang-version
         run: |
           echo golang_version=$(cat .tool-versions | grep golang | cut -d' ' -f2) >> $GITHUB_OUTPUT
-          echo goos=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f1) >> $GITHUB_OUTPUT
-          echo goarch=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f2) >> $GITHUB_OUTPUT
+      #   echo goos=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f1) >> $GITHUB_OUTPUT
+      #   echo goarch=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f2) >> $GITHUB_OUTPUT
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -44,9 +44,9 @@ jobs:
         run: go mod download
 
       - name: Build
-        env:
-          GOOS: ${{ steps.golang-version.outputs.goos }}
-          GOARCH: ${{ steps.golang-version.outputs.goarch }}
+        # env:
+        #   GOOS: ${{ steps.golang-version.outputs.goos }}
+        #   GOARCH: ${{ steps.golang-version.outputs.goarch }}
         run: go build -v -o build/${{ env.ARTIFACT_NAME }}
 
       - name: Archive artifacts
