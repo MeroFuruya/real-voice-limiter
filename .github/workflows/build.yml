@@ -32,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: build/*
-          name: real-voice-limiter.zip
+          name: real-voice-limiter
           if-no-files-found: warn
