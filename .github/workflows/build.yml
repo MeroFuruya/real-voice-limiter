@@ -12,8 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ARTIFACT_NAME: real-voice-limiter # -${{ matrix.goos-goarch}}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +34,6 @@ jobs:
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
           path: build/*
+          name: real-voice-limiter.zip
           if-no-files-found: warn
