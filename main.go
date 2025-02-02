@@ -170,7 +170,6 @@ func OnRecvFramesFactory(options Options) malgo.DataProc {
 		for i := uint32(0); i < sampleCount; i++ {
 			// calculate the time in seconds
 			t := float64(sampleT1+i) / SampleRate
-
 			inputSample := int16(pInputSamples[i*2]) | int16(pInputSamples[i*2+1])<<8
 
 			// absolute value
