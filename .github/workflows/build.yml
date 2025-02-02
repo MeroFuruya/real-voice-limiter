@@ -36,7 +36,7 @@ jobs:
       #   echo goarch=$(echo ${{ matrix.goos-goarch }} | cut -d'-' -f2) >> $GITHUB_OUTPUT
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ steps.golang-version.outputs.golang_version }}
 
